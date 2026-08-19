@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Spark</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="login-screen" class="screen">
+  <h1>Spark</h1>
+  <form id="login-form">
+    <input type="email" id="login-email" placeholder="Email" required autocomplete="username">
+    <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+    <button type="submit">Sign In</button>
+    <p id="login-error" class="error"></p>
+  </form>
+</div>
+
+<div id="app-screen" class="screen hidden">
+  <header>
+    <h1>Spark</h1>
+    <button id="logout-btn">Log out</button>
+  </header>
+
+  <nav id="tabs">
+    <button class="tab-btn active" data-tab="tasks">Tasks</button>
+    <button class="tab-btn" data-tab="notes">Notes</button>
+    <button class="tab-btn" data-tab="tickets">Tickets</button>
+  </nav>
+
+  <main>
+    <section id="tab-tasks" class="tab-panel active">
+      <form id="add-task-form" class="add-form">
+        <input type="text" id="new-task-text" placeholder="Add a task..." required>
+        <button type="submit">Add</button>
+      </form>
+      <div id="tasks-filter" class="filter-row">
+        <button class="filter-btn active" data-filter="open">Open</button>
+        <button class="filter-btn" data-filter="closed">Closed</button>
+        <button class="filter-btn" data-filter="all">All</button>
+      </div>
+      <ul id="tasks-list" class="item-list"></ul>
+    </section>
+
+    <section id="tab-notes" class="tab-panel">
+      <form id="add-note-form" class="add-form">
+        <input type="text" id="new-note-text" placeholder="Add a note..." required>
+        <button type="submit">Add</button>
+      </form>
+      <ul id="notes-list" class="item-list"></ul>
+    </section>
+
+    <section id="tab-tickets" class="tab-panel">
+      <form id="add-ticket-form" class="add-form">
+        <input type="text" id="new-ticket-title" placeholder="Ticket title..." required>
+        <button type="submit">Add</button>
+      </form>
+      <ul id="tickets-list" class="item-list"></ul>
+    </section>
+  </main>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
