@@ -20,6 +20,36 @@ function nowIso() {
   return new Date().toISOString()
 }
 
+// Lets a returning visit skip the login form entirely, without ever
+// putting the password in this file (which anyone with the site's
+// link could read) - it only ever lives in this one phone's own
+// browser storage, same as how a browser's own "remember password"
+// feature works.
+const CREDS_KEY = 'sparkPhoneCreds'
+
+function saveCreds(email, password) {
+  try {
+    localStorage.setItem(CREDS_KEY, JSON.stringify({ email, password }))
+  } catch (e) {
+    console.error('Could not save login for next time:', e)
+  }
+}
+
+function loadCreds() {
+  try {
+    const raw = localStorage.getItem(CREDS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch (e) {
+    return null
+  }
+}
+
+function clearCreds() {
+  try {
+    localStorage.removeItem(CREDS_KEY)
+  } catch (e) {}
+}
+
 function showApp() {
   loginScreen.classList.add('hidden')
   appScreen.classList.remove('hidden')
@@ -45,21 +75,48 @@ loginForm.addEventListener('submit', async (e) => {
     return
   }
 
+  saveCreds(email, password)
   showApp()
 })
 
 logoutBtn.addEventListener('click', async () => {
   await supabase.auth.signOut()
+  clearCreds()
   showLogin()
 })
 
 // Supabase persists the session in localStorage by default, so a
 // returning visit (including "Add to Home Screen" launches) skips
-// straight past the login screen if it's still valid.
-supabase.auth.getSession().then(({ data }) => {
-  if (data.session) showApp()
-  else showLogin()
-})
+// straight past the login screen if that session is still valid. If
+// it has expired, fall back to this device's saved email/password (if
+// any was saved via a previous manual sign-in) to sign in again
+// silently instead of showing the form.
+async function tryAutoLogin() {
+  const { data } = await supabase.auth.getSession()
+  if (data.session) {
+    showApp()
+    return
+  }
+
+  const creds = loadCreds()
+  if (!creds) {
+    showLogin()
+    return
+  }
+
+  const { error } = await supabase.auth.signInWithPassword(creds)
+  if (error) {
+    // Saved password no longer works (changed elsewhere, etc.) -
+    // fall back to the manual form rather than looping forever.
+    clearCreds()
+    showLogin()
+    return
+  }
+
+  showApp()
+}
+
+tryAutoLogin()
 
 document.querySelectorAll('.tab-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
