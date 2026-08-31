@@ -179,6 +179,32 @@ main { flex: 1; padding: 16px; padding-bottom: 48px; }
 
 .note-item { border-left: 4px solid #FFF3B0; }
 
+/* Tasks/Notes stay a single row via .item's own flex layout - Tickets
+   need a second row underneath for the solution text (once resolved),
+   so this overrides just .ticket-item to stack vertically, with
+   .ticket-item-top holding the original single-row content. */
+.ticket-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.ticket-item-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ticket-solution {
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .ticket-item select {
   padding: 6px 8px;
   border-radius: 6px;

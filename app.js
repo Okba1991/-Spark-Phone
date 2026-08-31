@@ -358,10 +358,13 @@ function renderTickets(tickets) {
     const li = document.createElement('li')
     li.className = 'item ticket-item'
 
+    const top = document.createElement('div')
+    top.className = 'ticket-item-top'
+
     const title = document.createElement('span')
     title.className = 'item-text'
     title.textContent = ticket.title
-    li.append(title)
+    top.append(title)
 
     const statusSelect = document.createElement('select')
     TICKET_STATUSES.forEach((status) => {
@@ -372,13 +375,22 @@ function renderTickets(tickets) {
       statusSelect.appendChild(opt)
     })
     statusSelect.addEventListener('change', () => setTicketStatus(ticket.id, statusSelect.value))
-    li.append(statusSelect)
+    top.append(statusSelect)
 
     const delBtn = document.createElement('button')
     delBtn.className = 'delete-btn'
     delBtn.textContent = '✕'
     delBtn.addEventListener('click', () => deleteTicket(ticket.id))
-    li.append(delBtn)
+    top.append(delBtn)
+
+    li.append(top)
+
+    if (ticket.solution) {
+      const solution = document.createElement('div')
+      solution.className = 'ticket-solution'
+      solution.textContent = 'Solution: ' + ticket.solution
+      li.append(solution)
+    }
 
     list.appendChild(li)
   })
