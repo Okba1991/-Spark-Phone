@@ -81,16 +81,18 @@ header h1 { font-size: 20px; margin: 0; }
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
+  overflow-x: auto;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 12px;
+  padding: 12px 8px;
   border: none;
   background: none;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--muted);
   border-bottom: 2px solid transparent;
+  white-space: nowrap;
 }
 
 .tab-btn.active {
@@ -103,6 +105,12 @@ main { flex: 1; padding: 16px; padding-bottom: 48px; }
 
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
+
+.tab-hint {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
 
 .add-form {
   display: flex;
@@ -125,6 +133,18 @@ main { flex: 1; padding: 16px; padding-bottom: 48px; }
   background: var(--accent);
   color: white;
   font-weight: 600;
+}
+
+.password-add-form {
+  flex-wrap: wrap;
+}
+
+.password-add-form input {
+  flex: 1 1 100%;
+}
+
+.password-add-form button {
+  flex: 1 1 100%;
 }
 
 .filter-row {
@@ -179,17 +199,17 @@ main { flex: 1; padding: 16px; padding-bottom: 48px; }
 
 .note-item { border-left: 4px solid #FFF3B0; }
 
-/* Tasks/Notes stay a single row via .item's own flex layout - Tickets
-   need a second row underneath for the solution text (once resolved),
-   so this overrides just .ticket-item to stack vertically, with
-   .ticket-item-top holding the original single-row content. */
-.ticket-item {
+/* Tasks/Notes stay a single row via .item's own flex layout - Tickets/
+   Passwords/Emails need a second block underneath, so this overrides
+   just those item types to stack vertically, with the "-top" class
+   holding the original single-row content. */
+.ticket-item, .password-item, .email-item {
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
 }
 
-.ticket-item-top {
+.ticket-item-top, .password-item-top, .email-item-top {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -210,6 +230,66 @@ main { flex: 1; padding: 16px; padding-bottom: 48px; }
   border-radius: 6px;
   border: 1px solid var(--border);
   font-size: 14px;
+}
+
+.project-badge {
+  font-size: 11px;
+  color: var(--accent);
+  background: #E6F8FC;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.password-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.password-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.password-value {
+  flex: 1;
+  word-break: break-word;
+}
+
+.password-notes {
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
+.small-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--accent);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.email-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.email-toggle {
+  align-self: flex-start;
+}
+
+.email-body {
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 10px;
 }
 
 .delete-btn {

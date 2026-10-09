@@ -1,7 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
 // This page is wired to one specific Supabase project - the same one
-// Spark's desktop sync uses (see services/cloud_sync.py). The
+// Star's desktop sync uses (see services/cloud_sync.py). The
 // publishable key is meant to be public (Supabase's own docs: "safe
 // to use in a browser") - real access control is Row Level Security
 // on the tables themselves, not secrecy of this key.
@@ -25,7 +25,7 @@ function nowIso() {
 // link could read) - it only ever lives in this one phone's own
 // browser storage, same as how a browser's own "remember password"
 // feature works.
-const CREDS_KEY = 'sparkPhoneCreds'
+const CREDS_KEY = 'starPhoneCreds'
 
 function saveCreds(email, password) {
   try {
@@ -434,8 +434,275 @@ document.getElementById('add-ticket-form').addEventListener('submit', async (e) 
   loadTickets()
 })
 
+// ============================= Passwords ================================
+// Same Row Level Security model as every other table here - this
+// table is only reachable at all once signed in as the one owner
+// account, same login as Tasks/Notes/Tickets above.
+
+async function loadPasswords() {
+  const { data, error } = await supabase
+    .from('password_entries')
+    .select('*')
+    .eq('deleted', false)
+    .order('title', { ascending: true })
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  renderPasswords(data)
+}
+
+function renderPasswords(entries) {
+  const list = document.getElementById('passwords-list')
+  list.innerHTML = ''
+
+  if (entries.length === 0) {
+    renderEmptyHint(list, 'No passwords yet.')
+    return
+  }
+
+  entries.forEach((entry) => {
+    const li = document.createElement('li')
+    li.className = 'item password-item'
+
+    const top = document.createElement('div')
+    top.className = 'password-item-top'
+
+    const title = document.createElement('span')
+    title.className = 'item-text'
+    title.textContent = entry.title
+    top.append(title)
+
+    if (entry.project) {
+      const badge = document.createElement('span')
+      badge.className = 'project-badge'
+      badge.textContent = entry.project
+      top.append(badge)
+    }
+
+    const delBtn = document.createElement('button')
+    delBtn.className = 'delete-btn'
+    delBtn.textContent = '✕'
+    delBtn.addEventListener('click', () => deletePassword(entry.id))
+    top.append(delBtn)
+
+    li.append(top)
+
+    const fields = document.createElement('div')
+    fields.className = 'password-fields'
+
+    if (entry.username) {
+      fields.append(buildCopyRow('Username', entry.username))
+    }
+
+    if (entry.password) {
+      fields.append(buildPasswordRow(entry.password))
+    }
+
+    if (entry.url) {
+      const urlRow = document.createElement('div')
+      urlRow.className = 'password-row'
+      const link = document.createElement('a')
+      link.href = entry.url.startsWith('http') ? entry.url : 'https://' + entry.url
+      link.target = '_blank'
+      link.rel = 'noopener'
+      link.textContent = entry.url
+      urlRow.append(link)
+      fields.append(urlRow)
+    }
+
+    if (entry.notes) {
+      const notesRow = document.createElement('div')
+      notesRow.className = 'password-row password-notes'
+      notesRow.textContent = entry.notes
+      fields.append(notesRow)
+    }
+
+    li.append(fields)
+    list.appendChild(li)
+  })
+}
+
+function buildCopyRow(label, value) {
+  const row = document.createElement('div')
+  row.className = 'password-row'
+
+  const span = document.createElement('span')
+  span.className = 'password-value'
+  span.textContent = `${label}: ${value}`
+  row.append(span)
+
+  const copyBtn = document.createElement('button')
+  copyBtn.className = 'small-btn'
+  copyBtn.textContent = 'Copy'
+  copyBtn.addEventListener('click', () => copyToClipboard(value, copyBtn))
+  row.append(copyBtn)
+
+  return row
+}
+
+function buildPasswordRow(password) {
+  const row = document.createElement('div')
+  row.className = 'password-row'
+
+  const span = document.createElement('span')
+  span.className = 'password-value'
+  span.textContent = 'Password: ' + '•'.repeat(Math.min(password.length, 12))
+
+  let revealed = false
+
+  const revealBtn = document.createElement('button')
+  revealBtn.className = 'small-btn'
+  revealBtn.textContent = 'Show'
+  revealBtn.addEventListener('click', () => {
+    revealed = !revealed
+    span.textContent = 'Password: ' + (revealed ? password : '•'.repeat(Math.min(password.length, 12)))
+    revealBtn.textContent = revealed ? 'Hide' : 'Show'
+  })
+
+  const copyBtn = document.createElement('button')
+  copyBtn.className = 'small-btn'
+  copyBtn.textContent = 'Copy'
+  copyBtn.addEventListener('click', () => copyToClipboard(password, copyBtn))
+
+  row.append(span, revealBtn, copyBtn)
+  return row
+}
+
+async function copyToClipboard(value, button) {
+  try {
+    await navigator.clipboard.writeText(value)
+    const original = button.textContent
+    button.textContent = 'Copied'
+    setTimeout(() => { button.textContent = original }, 1200)
+  } catch (e) {
+    console.error('Clipboard copy failed:', e)
+  }
+}
+
+async function deletePassword(id) {
+  await supabase.from('password_entries')
+    .update({ deleted: true, deleted_at: nowIso(), updated_at: nowIso() })
+    .eq('id', id)
+  loadPasswords()
+}
+
+document.getElementById('add-password-form').addEventListener('submit', async (e) => {
+  e.preventDefault()
+
+  const titleInput = document.getElementById('new-password-title')
+  const title = titleInput.value.trim()
+  if (!title) return
+
+  const username = document.getElementById('new-password-username').value.trim() || null
+  const password = document.getElementById('new-password-password').value.trim() || null
+  const url = document.getElementById('new-password-url').value.trim() || null
+  const project = document.getElementById('new-password-project').value.trim() || null
+
+  await supabase.from('password_entries').insert({
+    title, username, password, url, project,
+    deleted: false,
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  })
+
+  e.target.reset()
+  loadPasswords()
+})
+
+// =========================== Important Emails ===========================
+// Read-only besides Unpin - no "add" form here, since the phone has no
+// Outlook access to pull a real email's content from (see
+// services/cloud_sync.py's pinned_emails section).
+
+async function loadEmails() {
+  const { data, error } = await supabase
+    .from('pinned_emails')
+    .select('*')
+    .eq('deleted', false)
+    .order('pinned_at', { ascending: false })
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  renderEmails(data)
+}
+
+function renderEmails(emails) {
+  const list = document.getElementById('emails-list')
+  list.innerHTML = ''
+
+  if (emails.length === 0) {
+    renderEmptyHint(list, 'No pinned emails yet.')
+    return
+  }
+
+  emails.forEach((email) => {
+    const li = document.createElement('li')
+    li.className = 'item email-item'
+
+    const top = document.createElement('div')
+    top.className = 'email-item-top'
+
+    const subject = document.createElement('span')
+    subject.className = 'item-text'
+    subject.textContent = email.subject || '(no subject)'
+    top.append(subject)
+
+    const delBtn = document.createElement('button')
+    delBtn.className = 'delete-btn'
+    delBtn.textContent = '✕'
+    delBtn.title = 'Unpin'
+    delBtn.addEventListener('click', () => unpinEmail(email.id))
+    top.append(delBtn)
+
+    li.append(top)
+
+    const meta = document.createElement('div')
+    meta.className = 'email-meta'
+    const who = email.sender_name || email.sender_email || ''
+    const when = email.received_time
+      ? new Date(email.received_time).toLocaleString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+      : ''
+    meta.textContent = [who, when].filter(Boolean).join(' · ')
+    li.append(meta)
+
+    if (email.body) {
+      const toggle = document.createElement('button')
+      toggle.className = 'small-btn email-toggle'
+      toggle.textContent = 'View'
+
+      const body = document.createElement('div')
+      body.className = 'email-body hidden'
+      body.textContent = email.body
+
+      toggle.addEventListener('click', () => {
+        body.classList.toggle('hidden')
+        toggle.textContent = body.classList.contains('hidden') ? 'View' : 'Hide'
+      })
+
+      li.append(toggle, body)
+    }
+
+    list.appendChild(li)
+  })
+}
+
+async function unpinEmail(id) {
+  await supabase.from('pinned_emails')
+    .update({ deleted: true, deleted_at: nowIso(), updated_at: nowIso() })
+    .eq('id', id)
+  loadEmails()
+}
+
 function loadAll() {
   loadTasks()
   loadNotes()
   loadTickets()
+  loadPasswords()
+  loadEmails()
 }

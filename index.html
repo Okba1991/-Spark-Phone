@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Spark</title>
+<title>Star</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="login-screen" class="screen">
-  <h1>Spark</h1>
+  <h1>Star</h1>
   <form id="login-form">
     <input type="email" id="login-email" placeholder="Email" required autocomplete="username">
     <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
@@ -20,7 +20,7 @@
 
 <div id="app-screen" class="screen hidden">
   <header>
-    <h1>Spark</h1>
+    <h1>Star</h1>
     <button id="logout-btn">Log out</button>
   </header>
 
@@ -28,6 +28,8 @@
     <button class="tab-btn active" data-tab="tasks">Tasks</button>
     <button class="tab-btn" data-tab="notes">Notes</button>
     <button class="tab-btn" data-tab="tickets">Tickets</button>
+    <button class="tab-btn" data-tab="passwords">Passwords</button>
+    <button class="tab-btn" data-tab="emails">Emails</button>
   </nav>
 
   <main>
@@ -58,6 +60,23 @@
         <button type="submit">Add</button>
       </form>
       <ul id="tickets-list" class="item-list"></ul>
+    </section>
+
+    <section id="tab-passwords" class="tab-panel">
+      <form id="add-password-form" class="add-form password-add-form">
+        <input type="text" id="new-password-title" placeholder="Title..." required>
+        <input type="text" id="new-password-username" placeholder="Username (optional)">
+        <input type="text" id="new-password-password" placeholder="Password (optional)">
+        <input type="text" id="new-password-url" placeholder="URL (optional)">
+        <input type="text" id="new-password-project" placeholder="Project (optional)">
+        <button type="submit">Add</button>
+      </form>
+      <ul id="passwords-list" class="item-list"></ul>
+    </section>
+
+    <section id="tab-emails" class="tab-panel">
+      <p class="tab-hint">Pinned from Star's Outlook Search - view only here, unpin removes it everywhere.</p>
+      <ul id="emails-list" class="item-list"></ul>
     </section>
   </main>
 </div>
